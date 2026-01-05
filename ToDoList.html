@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>오늘 할 일</title>
+  <style>
+    :root{
+      --card-bg: rgba(255,255,255,.85);
+      --text: #0f172a;
+      --muted: rgba(15, 23, 42, .65);
+      --shadow: 0 18px 50px rgba(0,0,0,.18);
+      --radius: 18px;
+    }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", sans-serif;
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 28px;
+      background: radial-gradient(1200px 800px at 20% 20%, rgba(255,255,255,.35), transparent 55%),
+                  radial-gradient(900px 700px at 85% 30%, rgba(255,255,255,.22), transparent 55%),
+                  linear-gradient(135deg, #6d28d9 0%, #2563eb 35%, #06b6d4 70%, #22c55e 100%);
+      overflow-x:hidden;
+    }
+    .wrap{
+      width: min(760px, 100%);
+    }
+    .card{
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,.35);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 22px 22px 16px;
+      position: relative;
+    }
+    .top{
+      display:flex;
+      gap: 14px;
+      align-items:flex-start;
+      justify-content:space-between;
+      margin-bottom: 14px;
+    }
+    h1{
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+    .sub{
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .badge{
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(109,40,217,.18), rgba(6,182,212,.18));
+      border: 1px solid rgba(15,23,42,.08);
+      color: rgba(15,23,42,.85);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    form{
+      display:flex;
+      gap: 10px;
+      margin: 14px 0 10px;
+    }
+    input[type="text"]{
+      flex: 1;
+      border: 1px solid rgba(15,23,42,.12);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 14px;
+      outline: none;
+      background: rgba(255,255,255,.9);
+      transition: box-shadow .2s ease, transform .2s ease;
+    }
+    input[type="text"]:focus{
+      box-shadow: 0 0 0 4px rgba(37,99,235,.18);
+      transform: translateY(-1px);
+    }
+    button{
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 700;
+      font-size: 14px;
+      color: white;
+      cursor:pointer;
+      background: linear-gradient(135deg, #7c3aed 0%, #2563eb 40%, #06b6d4 100%);
+      box-shadow: 0 10px 18px rgba(37,99,235,.25);
+      transition: transform .18s ease, filter .18s ease;
+      user-select:none;
+    }
+    button:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    button:active{ transform: translateY(0px); filter: brightness(.98); }
+
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      margin: 8px 2px 0;
+    }
+
+    ul{
+      list-style:none;
+      padding: 0;
+      margin: 12px 0 6px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.70);
+      transition: transform .18s ease, opacity .18s ease, max-height .18s ease, margin .18s ease, padding .18s ease;
+    }
+    .left{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .check{
+      width: 22px;
+      height: 22px;
+      border-radius: 9px;
+      border: 1.5px solid rgba(15,23,42,.25);
+      background: rgba(255,255,255,.95);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      flex: 0 0 auto;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .check:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0,0,0,.08);
+    }
+    .check svg{ opacity: 0; transform: scale(.7); transition: opacity .12s ease, transform .12s ease; }
+    .text{
+      font-size: 14px;
+      line-height: 1.2;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .meta{
+      font-size: 12px;
+      color: var(--muted);
+      flex: 0 0 auto;
+      user-select:none;
+    }
+    .row-actions{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+    }
+    .ghost{
+      background: rgba(15,23,42,.04);
+      color: rgba(15,23,42,.75);
+      box-shadow:none;
+      font-weight: 650;
+      padding: 10px 12px;
+    }
+    .ghost:hover{ filter: none; }
+
+    .divider{
+      height: 1px;
+      background: rgba(15,23,42,.08);
+      margin: 12px 0 10px;
+    }
+    .footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 2px 0;
+    }
+    .danger{
+      color: rgba(185,28,28,.9);
+      background: rgba(185,28,28,.08);
+      border: 1px solid rgba(185,28,28,.12);
+    }
+
+    /* 체크하면 "없어지는" 느낌을 위한 제거 애니메이션 */
+    .removing{
+      opacity: 0;
+      transform: translateY(-6px);
+      max-height: 0 !important;
+      margin: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      border-width: 0 !important;
+    }
+
+    @media (max-width:520px){
+      .meta{ display:none; }
+      button{ padding: 12px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="application" aria-label="오늘 할 일">
+      <div class="top">
+        <div>
+          <h1>오늘 할 일</h1>
+          <div class="sub" id="todayLine"></div>
+        </div>
+        <div class="badge" id="countBadge">0개</div>
+      </div>
+
+      <form id="todoForm" autocomplete="off">
+        <input id="todoInput" type="text" placeholder="할 일을 입력하고 Enter…" maxlength="80" />
+        <button type="submit">추가</button>
+      </form>
+
+      <div class="hint">✔️ 체크하면 목록에서 사라집니다. (자동 저장)</div>
+
+      <ul id="list" aria-live="polite"></ul>
+
+      <div class="divider"></div>
+
+      <div class="footer">
+        <div>Tip: “회의 준비”, “운동 30분”처럼 동사로 쓰면 실행률이 올라갑니다.</div>
+        <button class="ghost danger" id="clearBtn" type="button">전체 삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Utilities ---
+    const $ = (s) => document.querySelector(s);
+    const STORAGE_KEY = "today_todo_v1";
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function formatKoreanDate(d){
+      // 브라우저 로컬 시간을 사용(한국 환경 기준). Asia/Seoul 환경이면 그대로 날짜가 맞습니다.
+      const y = d.getFullYear();
+      const m = d.getMonth()+1;
+      const day = d.getDate();
+      const weekdays = ["일","월","화","수","목","금","토"];
+      const w = weekdays[d.getDay()];
+      return `${y}년 ${m}월 ${day}일 (${w})`;
+    }
+
+    function load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){
+        return [];
+      }
+    }
+    function save(items){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+    function uid(){
+      return Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    // --- State ---
+    let items = load();
+
+    // --- DOM ---
+    const todayLine = $("#todayLine");
+    const badge = $("#countBadge");
+    const list = $("#list");
+    const input = $("#todoInput");
+    const form = $("#todoForm");
+    const clearBtn = $("#clearBtn");
+
+    todayLine.textContent = formatKoreanDate(new Date());
+
+    function render(){
+      list.innerHTML = "";
+      badge.textContent = `${items.length}개`;
+
+      if(items.length === 0){
+        const li = document.createElement("li");
+        li.className = "item";
+        li.style.justifyContent = "center";
+        li.style.color = "rgba(15,23,42,.6)";
+        li.textContent = "아직 할 일이 없어요. 오늘의 한 가지를 추가해볼까요?";
+        list.appendChild(li);
+        return;
+      }
+
+      for(const it of items){
+        const li = document.createElement("li");
+        li.className = "item";
+        li.dataset.id = it.id;
+
+        const left = document.createElement("div");
+        left.className = "left";
+
+        const check = document.createElement("button");
+        check.type = "button";
+        check.className = "check";
+        check.setAttribute("aria-label", "완료(삭제)");
+        check.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 7L9 18L4 13" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `;
+
+        const text = document.createElement("div");
+        text.className = "text";
+        text.title = it.text;
+        text.textContent = it.text;
+
+        left.appendChild(check);
+        left.appendChild(text);
+
+        const right = document.createElement("div");
+        right.className = "row-actions";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = it.time;
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "ghost";
+        del.textContent = "삭제";
+
+        right.appendChild(meta);
+        right.appendChild(del);
+
+        li.appendChild(left);
+        li.appendChild(right);
+
+        // 체크하면 사라지게 (애니메이션 후 실제 삭제)
+        function removeWithAnimation(){
+          li.classList.add("removing");
+          // 렌더링 타이밍 안정화
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              items = items.filter(x => x.id !== it.id);
+              save(items);
+              render();
+            }, 180);
+          });
+        }
+
+        check.addEventListener("click", removeWithAnimation);
+        del.addEventListener("click", removeWithAnimation);
+
+        list.appendChild(li);
+
+        // 체크 아이콘이 살짝 보였다가 사라지는 미세한 피드백(클릭감)
+        check.addEventListener("pointerdown", () => {
+          const svg = check.querySelector("svg");
+          svg.style.opacity = "1";
+          svg.style.transform = "scale(1)";
+          setTimeout(() => {
+            svg.style.opacity = "0";
+            svg.style.transform = "scale(.7)";
+          }, 220);
+        });
+      }
+    }
+
+    function nowHHMM(){
+      const d = new Date();
+      return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const v = input.value.trim();
+      if(!v) return;
+
+      items.unshift({
+        id: uid(),
+        text: v,
+        time: nowHHMM()
+      });
+      save(items);
+      input.value = "";
+      input.focus();
+      render();
+    });
+
+    clearBtn.addEventListener("click", () => {
+      if(items.length === 0) return;
+      // 확인 팝업(가볍게)
+      const ok = confirm("오늘 할 일을 모두 삭제할까요?");
+      if(!ok) return;
+      items = [];
+      save(items);
+      render();
+      input.focus();
+    });
+
+    render();
+    input.focus();
+  </script>
+</body>
+</html>
